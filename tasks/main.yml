@@ -1,0 +1,73 @@
+---
+- name: Add a group to the inventory for qdevice
+  group_by:
+    key: "cluster_node_is_arbiter_{{ cluster_node_is_arbiter | bool }}"
+
+- name: Check if they are only one arbiter
+  fail:
+    msg: 'Cluster must have only one arbiter'
+  when: groups['cluster_node_is_arbiter_True']|default([])|count() != 1
+  run_once: true
+
+- name: Include distribution version specific variables - debian
+  include_vars: "debian10.yml"
+  when: ansible_distribution == 'Debian' and ansible_distribution_major_version == "10"
+
+- name: Include distribution specific task - Debian
+  include_tasks: "debian10.yml"
+  when: ansible_distribution == 'Debian' and ansible_distribution_major_version == "10"
+
+# WARNING: the hostname is resolved from /etc/hosts file! If you change hostname
+# of machine through /etc/hosts the ansible will pick it up and use it!
+- name: Add hosts to /etc/hosts (using default (GW) IPv4 address)
+  lineinfile:
+    dest: '/etc/hosts'
+    regexp: "{{ hostvars[item]['ansible_default_ipv4']['address'] }} "
+    line: >
+      {{ hostvars[item]['ansible_default_ipv4']['address'] }}
+      {{ hostvars[item][cluster_hostname_fact] }}
+    mode: '0644'
+  with_items: "{{ play_hosts }}"
+  when:
+    - cluster_etc_hosts | bool
+
+- name: Create cluster system group
+  group:
+    name: "{{ cluster_group }}"
+    state: 'present'
+  when: cluster_node_is_arbiter
+
+- name: Create cluster system user
+  user:
+    name: "{{ cluster_user }}"
+    state: 'present'
+    password: >-
+      {{ cluster_user_pass |
+      password_hash('sha512', ansible_hostname|replace('-','x') |
+      truncate(16, True, '', 0)) }}
+    groups: "{{ cluster_group }}"
+    comment: 'HA Cluster Administrator'
+  when: cluster_node_is_arbiter
+
+- name: Enable and start PCSD service
+  service:
+    name: 'pcsd'
+    enabled: true
+    state: 'started'
+  when: cluster_node_is_arbiter
+
+- name: Authorize cluster nodes
+  pcs_auth:
+    node_name: "{{ hostvars[item][cluster_hostname_fact] }}"
+    username: "{{ cluster_user }}"
+    password: "{{ cluster_user_pass }}"
+  with_items: "{{ play_hosts }}"
+  when: not cluster_node_is_arbiter
+
+- name: Setup qdevice into cluster
+  pcs_quorum_qdevice:
+    qdevice: "{{ hostvars[groups['cluster_node_is_arbiter_True'][0]].inventory_hostname_short }}"
+    algorithm: "{{ qdevice_algorithm }}"
+    allowed_qdevice_changes: "{{ qdevice_allowed_change }}"
+  run_once: true
+  when: not cluster_node_is_arbiter

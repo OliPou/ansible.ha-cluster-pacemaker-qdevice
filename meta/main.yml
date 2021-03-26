@@ -1,0 +1,14 @@
+galaxy_info:
+  author: Olivier Pouilly
+  description: pacemaker basic qdevice configuration
+  company: your company (optional)
+  license: GPLv3
+  license: licen
+  min_ansible_version: 2.10
+  platforms:
+  - name: 10
+    versions:
+    - 10
+  galaxy_tags: pacemaker
+dependencies:
+  - { role: ondrejhome.pcs-modules-2 }

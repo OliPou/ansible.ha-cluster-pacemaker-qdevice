@@ -1,0 +1,15 @@
+---
+- name: Install required package to add qdevice on all cluster node
+  apt:
+    name: "{{ item }}"
+    state: 'present'
+  loop:
+    - "{{ pacemaker_cluster_package }}"
+    - "{{ pcs_module_dependencies }}"
+
+- name: Install required package on the qdevice
+  apt:
+    name: "{{ item }}"
+    state: 'present'
+  loop:
+    - "{{ pacemaker_qdevice_package }}"
