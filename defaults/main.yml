@@ -1,0 +1,26 @@
+---
+# user used for authorizing cluster nodes
+cluster_user: hacluster
+cluster_user_pass: testtest
+
+# group to which cluster user belongs (should be 'haclient')
+cluster_group: haclient
+
+# name of the cluster
+cluster_name: pacemaker
+
+# enable cluster on boot on normal (not pacemaker_remote) nodes
+cluster_enable_service: true
+
+# Whether to add hosts to /etc/hosts.
+cluster_etc_hosts: true
+
+# Which Ansible fact to use as the hostname of cluster nodes.
+cluster_hostname_fact: "ansible_hostname"
+
+# Define if which server is the arbiter
+cluster_node_is_arbiter: false
+
+# Qdevice Setting
+qdevice_allowed_change: none
+qdevice_algorithm: 'ffsplit'
