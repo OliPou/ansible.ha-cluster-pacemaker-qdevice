@@ -1,8 +1,8 @@
 ---
 pacemaker_cluster_package:
- - corosync-qdevice
+  - corosync-qdevice
 pacemaker_qdevice_package:
- - pcs
- - corosync-qnetd
+  - pcs
+  - corosync-qnetd
 pcs_module_dependencies:
   - python3-distutils
