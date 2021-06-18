@@ -48,6 +48,7 @@
     groups: "{{ cluster_group }}"
     comment: 'HA Cluster Administrator'
   when: cluster_node_is_arbiter
+  no_log: yes
 
 - name: Enable and start PCSD service
   service:
@@ -63,11 +64,12 @@
     password: "{{ cluster_user_pass }}"
   with_items: "{{ play_hosts }}"
   when: not cluster_node_is_arbiter
+  no_log: yes
 
 - name: Setup qdevice into cluster
   pcs_quorum_qdevice:
     qdevice: "{{ hostvars[groups['cluster_node_is_arbiter_True'][0]].inventory_hostname_short }}"
     algorithm: "{{ qdevice_algorithm }}"
-    allowed_qdevice_changes: "{{ qdevice_allowed_change }}"
+    allowed_qdevice_changes: "{{ qdevice_allowed_change }}"
   run_once: true
   when: not cluster_node_is_arbiter
